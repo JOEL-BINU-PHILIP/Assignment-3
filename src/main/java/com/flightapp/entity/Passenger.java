@@ -1,27 +1,34 @@
 package com.flightapp.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+
 @Entity
-@Table(name = "passengers")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Passenger {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id;  // PRIMARY KEY -> REQUIRED!!
 
+    @NotBlank(message = "Passenger name cannot be blank")
     private String name;
-    private String gender;
-    private Integer age;
 
+    @NotBlank(message = "Gender is required")
+    private String gender;
+
+    @Min(value = 1, message = "Age must be greater than 0")
+    private int age;
+
+    @NotBlank(message = "Seat number is required")
     private String seatNumber;
-    private String meal; // "VEG" / "NON-VEG" / null
+
+    @NotBlank(message = "Meal preference is required")
+    private String meal;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id")
