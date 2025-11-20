@@ -4,12 +4,13 @@ import com.flightapp.dto.FlightInventoryRequest;
 import com.flightapp.dto.FlightSearchRequest;
 import com.flightapp.entity.Airline;
 import com.flightapp.entity.Flight;
+import com.flightapp.exception.ApiException;
 import com.flightapp.repository.AirlineRepository;
 import com.flightapp.repository.FlightRepository;
 import com.flightapp.service.FlightService;
-import com.flightapp.exception.ApiException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -29,11 +30,16 @@ public class FlightServiceImpl implements FlightService {
 
     @Override
     public Flight addInventory(FlightInventoryRequest request) {
+
         Airline airline = airlineRepository.findByName(request.getAirlineName())
-                .orElseGet(() -> airlineRepository.save(Airline.builder()
-                        .name(request.getAirlineName())
-                        .logoUrl(request.getAirlineLogoUrl())
-                        .build()));
+                .orElseGet(() ->
+                        airlineRepository.save(
+                                Airline.builder()
+                                        .name(request.getAirlineName())
+                                        .logoUrl(request.getAirlineLogoUrl())
+                                        .build()
+                        )
+                );
 
         Flight flight = Flight.builder()
                 .flightNumber(request.getFlightNumber())
@@ -53,13 +59,21 @@ public class FlightServiceImpl implements FlightService {
     @Override
     public List<Flight> searchFlights(FlightSearchRequest req) {
         LocalDate date = req.getTravelDate();
-        // convert to a LocalDateTime for the query (search by the date)
-        LocalDateTime dt = LocalDateTime.of(date, LocalTime.MIDNIGHT);
-        return flightRepository.search(req.getFromPlace(), req.getToPlace(), dt);
+
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(23, 59, 59);
+
+        return flightRepository.search(
+                req.getFromPlace(),
+                req.getToPlace(),
+                start,
+                end
+        );
     }
 
     @Override
     public Flight getFlightById(Long id) {
-        return flightRepository.findById(id).orElseThrow(() -> new ApiException("Flight not found: " + id));
+        return flightRepository.findById(id)
+                .orElseThrow(() -> new ApiException("Flight not found: " + id));
     }
 }

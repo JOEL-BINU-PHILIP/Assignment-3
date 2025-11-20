@@ -58,7 +58,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Swagger UI / OpenAPI (springdoc) -->
 		<!-- SWAGGER / OPENAPI -->
 		<dependency>
 		    <groupId>org.springdoc</groupId>
@@ -72,6 +71,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+		<!-- H2 Embedded DB for Testing -->
+		<dependency>
+		    <groupId>com.h2database</groupId>
+		    <artifactId>h2</artifactId>
+		    <scope>test</scope>
+		</dependency>
 
     </dependencies>
 
