@@ -1,22 +1,17 @@
 package com.flightapp.repository;
 
 import com.flightapp.entity.Flight;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-public interface FlightRepository extends JpaRepository<Flight, Long> {
+public interface FlightRepository extends ReactiveCrudRepository<Flight, Long> {
 
-    @Query("""
-           SELECT f FROM Flight f
-           WHERE f.fromPlace = :fromPlace
-             AND f.toPlace = :toPlace
-             AND f.departureTime BETWEEN :start AND :end
-           """)
-    List<Flight> search(String fromPlace,
-                        String toPlace,
-                        LocalDateTime start,
-                        LocalDateTime end);
+    @Query("SELECT * FROM flights WHERE from_place = :fromPlace AND to_place = :toPlace AND departure_time BETWEEN :start AND :end")
+    Flux<Flight> search(String fromPlace, String toPlace, LocalDateTime start, LocalDateTime end);
+
+    // optionally: find by flight number
+    Flux<Flight> findByFlightNumber(String flightNumber);
 }

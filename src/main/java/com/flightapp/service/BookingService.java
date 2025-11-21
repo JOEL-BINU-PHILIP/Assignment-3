@@ -1,13 +1,15 @@
 package com.flightapp.service;
 
 import com.flightapp.dto.BookingRequest;
-import com.flightapp.entity.Booking;
 import com.flightapp.dto.BookingResponse;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
+
 import java.util.List;
 
 public interface BookingService {
-    BookingResponse bookTicket(Long flightId, BookingRequest request);
-    BookingResponse getTicketByPnr(String pnr);
-    List<BookingResponse> getBookingHistory(String email);
-    void cancelBooking(String pnr);
+    Mono<BookingResponse> bookTicket(Long flightId, BookingRequest request);
+    Mono<BookingResponse> getTicketByPnr(String pnr);
+    Flux<BookingResponse> getBookingHistory(String email);
+    Mono<Void> cancelBooking(String pnr);
 }

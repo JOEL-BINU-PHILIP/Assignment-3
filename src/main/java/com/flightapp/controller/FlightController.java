@@ -7,8 +7,9 @@ import com.flightapp.service.FlightService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/v1.0/flight")
@@ -22,40 +23,40 @@ public class FlightController {
         this.bookingService = bookingService;
     }
 
+    // Add inventory -> respond 201 CREATED
     @PostMapping("/airline/inventory/add")
-    public ResponseEntity<Flight> addInventory(@Valid @RequestBody FlightInventoryRequest req) {
-        Flight created = flightService.addInventory(req);
-        return ResponseEntity.ok(created);
+    public Mono<ResponseEntity<Flight>> addInventory(@Valid @RequestBody Mono<FlightInventoryRequest> reqMono) {
+        return reqMono.flatMap(flightService::addInventory)
+                .map(f -> ResponseEntity.status(HttpStatus.CREATED).body(f));
     }
 
+    // Search - returns Flux<Flight>
     @PostMapping("/search")
-    public ResponseEntity<List<Flight>> searchFlights(@Valid @RequestBody FlightSearchRequest req) {
-        List<Flight> results = flightService.searchFlights(req);
-        return ResponseEntity.ok(results);
+    public Flux<Flight> searchFlights(@Valid @RequestBody Mono<FlightSearchRequest> reqMono) {
+        return reqMono.flatMapMany(flightService::searchFlights);
     }
 
+    // Book ticket -> returns 201 Created with BookingResponse
     @PostMapping("/booking/{flightId}")
-    public ResponseEntity<BookingResponse> bookTicket(@PathVariable Long flightId,
-                                                      @Valid @RequestBody BookingRequest req) {
-        BookingResponse response = bookingService.bookTicket(flightId, req);
-        return ResponseEntity.ok(response);
+    public Mono<ResponseEntity<BookingResponse>> bookTicket(@PathVariable Long flightId,
+                                                            @Valid @RequestBody Mono<BookingRequest> reqMono) {
+        return reqMono.flatMap(req -> bookingService.bookTicket(flightId, req))
+                .map(resp -> ResponseEntity.status(HttpStatus.CREATED).body(resp));
     }
 
     @GetMapping("/ticket/{pnr}")
-    public ResponseEntity<BookingResponse> getTicket(@PathVariable String pnr) {
-        BookingResponse response = bookingService.getTicketByPnr(pnr);
-        return ResponseEntity.ok(response);
+    public Mono<BookingResponse> getTicket(@PathVariable String pnr) {
+        return bookingService.getTicketByPnr(pnr);
     }
 
     @GetMapping("/booking/history/{email}")
-    public ResponseEntity<List<BookingResponse>> bookingHistory(@PathVariable String email) {
-        List<BookingResponse> list = bookingService.getBookingHistory(email);
-        return ResponseEntity.ok(list);
+    public Flux<BookingResponse> bookingHistory(@PathVariable String email) {
+        return bookingService.getBookingHistory(email);
     }
 
     @DeleteMapping("/booking/cancel/{pnr}")
-    public ResponseEntity<Void> cancelBooking(@PathVariable String pnr) {
-        bookingService.cancelBooking(pnr);
-        return ResponseEntity.noContent().build();
+    public Mono<ResponseEntity<Void>> cancelBooking(@PathVariable String pnr) {
+        return bookingService.cancelBooking(pnr)
+                .thenReturn(ResponseEntity.noContent().<Void>build());
     }
 }

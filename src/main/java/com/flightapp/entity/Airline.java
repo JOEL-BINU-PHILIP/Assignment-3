@@ -1,19 +1,16 @@
 package com.flightapp.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import jakarta.persistence.*;
 import lombok.*;
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-@Entity
-@Table(name = "airlines")
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table("airlines")
 public class Airline {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;

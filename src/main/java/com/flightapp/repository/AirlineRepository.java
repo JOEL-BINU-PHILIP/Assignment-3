@@ -1,9 +1,9 @@
 package com.flightapp.repository;
 
 import com.flightapp.entity.Airline;
-import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Mono;
 
-public interface AirlineRepository extends JpaRepository<Airline, Long> {
-    Optional<Airline> findByName(String name);
+public interface AirlineRepository extends ReactiveCrudRepository<Airline, Long> {
+    Mono<Airline> findByName(String name);
 }

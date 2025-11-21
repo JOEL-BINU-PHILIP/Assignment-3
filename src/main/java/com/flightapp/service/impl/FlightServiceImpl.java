@@ -8,13 +8,14 @@ import com.flightapp.exception.ApiException;
 import com.flightapp.repository.AirlineRepository;
 import com.flightapp.repository.FlightRepository;
 import com.flightapp.service.FlightService;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 
 @Service
 @Transactional
@@ -29,10 +30,23 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    public Flight addInventory(FlightInventoryRequest request) {
+    public Mono<Flight> addInventory(FlightInventoryRequest request) {
+        // validations
+        if (request.getDepartureTime().isAfter(request.getArrivalTime())) {
+            return Mono.error(new ApiException("Departure time must be before arrival time"));
+        }
+        if (request.getTotalSeats() <= 0) {
+            return Mono.error(new ApiException("totalSeats must be > 0"));
+        }
+        if (request.getPrice() <= 0) {
+            return Mono.error(new ApiException("price must be > 0"));
+        }
+        if (request.getFlightNumber() == null || request.getFlightNumber().isBlank()) {
+            return Mono.error(new ApiException("flightNumber is required"));
+        }
 
-        Airline airline = airlineRepository.findByName(request.getAirlineName())
-                .orElseGet(() ->
+        Mono<Airline> airlineMono = airlineRepository.findByName(request.getAirlineName())
+                .switchIfEmpty(
                         airlineRepository.save(
                                 Airline.builder()
                                         .name(request.getAirlineName())
@@ -41,39 +55,33 @@ public class FlightServiceImpl implements FlightService {
                         )
                 );
 
-        Flight flight = Flight.builder()
-                .flightNumber(request.getFlightNumber())
-                .fromPlace(request.getFromPlace())
-                .toPlace(request.getToPlace())
-                .departureTime(request.getDepartureTime())
-                .arrivalTime(request.getArrivalTime())
-                .price(request.getPrice())
-                .totalSeats(request.getTotalSeats())
-                .availableSeats(request.getTotalSeats())
-                .airline(airline)
-                .build();
-
-        return flightRepository.save(flight);
+        return airlineMono.flatMap(airline -> {
+            Flight flight = Flight.builder()
+                    .flightNumber(request.getFlightNumber())
+                    .fromPlace(request.getFromPlace())
+                    .toPlace(request.getToPlace())
+                    .departureTime(request.getDepartureTime())
+                    .arrivalTime(request.getArrivalTime())
+                    .price(request.getPrice())
+                    .totalSeats(request.getTotalSeats())
+                    .availableSeats(request.getTotalSeats())
+                    .airlineId(airline.getId())
+                    .build();
+            return flightRepository.save(flight);
+        });
     }
 
     @Override
-    public List<Flight> searchFlights(FlightSearchRequest req) {
+    public Flux<Flight> searchFlights(FlightSearchRequest req) {
         LocalDate date = req.getTravelDate();
-
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(23, 59, 59);
-
-        return flightRepository.search(
-                req.getFromPlace(),
-                req.getToPlace(),
-                start,
-                end
-        );
+        return flightRepository.search(req.getFromPlace(), req.getToPlace(), start, end);
     }
 
     @Override
-    public Flight getFlightById(Long id) {
+    public Mono<Flight> getFlightById(Long id) {
         return flightRepository.findById(id)
-                .orElseThrow(() -> new ApiException("Flight not found: " + id));
+                .switchIfEmpty(Mono.error(new ApiException("Flight not found: " + id)));
     }
 }

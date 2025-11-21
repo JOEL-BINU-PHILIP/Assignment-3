@@ -22,7 +22,9 @@ class FlightRepositoryTest {
         Airline airline = Airline.builder().name("MyAir").logoUrl("http://x").build();
         airline = airlineRepository.save(airline);
 
-        LocalDateTime dep = LocalDateTime.now().plusDays(5).withHour(9).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime dep = LocalDateTime.now().plusDays(5)
+                .withHour(9).withMinute(0).withSecond(0).withNano(0);
+
         Flight f = Flight.builder()
                 .flightNumber("T100")
                 .fromPlace("CityA")
@@ -37,11 +39,14 @@ class FlightRepositoryTest {
 
         flightRepository.save(f);
 
-        // The search implementation in the original code uses LocalDateTime at midnight
-        LocalDateTime query = dep.toLocalDate().atStartOfDay();
-        List<Flight> found = flightRepository.search("CityA", "CityB", query, query);
+        // FIX: Correct search range
+        LocalDateTime start = dep.minusHours(1);
+        LocalDateTime end   = dep.plusHours(1);
+
+        List<Flight> found = flightRepository.search("CityA", "CityB", start, end);
 
         assertThat(found).isNotEmpty();
         assertThat(found.get(0).getFlightNumber()).isEqualTo("T100");
     }
+
 }

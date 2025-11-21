@@ -1,26 +1,21 @@
 package com.flightapp.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-
-@Entity
-@Table(name = "flights")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table("flights")
 public class Flight {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Flight code / number
     private String flightNumber;
-
     private String fromPlace;
     private String toPlace;
 
@@ -32,7 +27,6 @@ public class Flight {
     private Integer totalSeats;
     private Integer availableSeats;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "airline_id")
-    private Airline airline;
+    // store airline id rather than object relation
+    private Long airlineId;
 }

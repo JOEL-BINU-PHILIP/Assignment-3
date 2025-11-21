@@ -10,6 +10,10 @@ import java.time.LocalDateTime;
 @Builder
 public class FlightInventoryRequest {
     @NotBlank
+    @Pattern(
+    	    regexp = "^[A-Z0-9]{3,10}$",
+    	    message = "Flight number must be 3–10 characters (uppercase letters or digits)"
+    	)
     private String flightNumber;
 
     @NotBlank
