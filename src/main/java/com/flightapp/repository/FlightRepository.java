@@ -12,6 +12,5 @@ public interface FlightRepository extends ReactiveCrudRepository<Flight, Long> {
     @Query("SELECT * FROM flights WHERE from_place = :fromPlace AND to_place = :toPlace AND departure_time BETWEEN :start AND :end")
     Flux<Flight> search(String fromPlace, String toPlace, LocalDateTime start, LocalDateTime end);
 
-    // optionally: find by flight number
     Flux<Flight> findByFlightNumber(String flightNumber);
 }

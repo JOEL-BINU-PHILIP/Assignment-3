@@ -31,20 +31,22 @@ public class FlightServiceImpl implements FlightService {
 
     @Override
     public Mono<Flight> addInventory(FlightInventoryRequest request) {
-        // validations
+
+        // Basic validations
         if (request.getDepartureTime().isAfter(request.getArrivalTime())) {
             return Mono.error(new ApiException("Departure time must be before arrival time"));
         }
         if (request.getTotalSeats() <= 0) {
-            return Mono.error(new ApiException("totalSeats must be > 0"));
+            return Mono.error(new ApiException("Total seats must be > 0"));
         }
         if (request.getPrice() <= 0) {
-            return Mono.error(new ApiException("price must be > 0"));
+            return Mono.error(new ApiException("Price must be > 0"));
         }
         if (request.getFlightNumber() == null || request.getFlightNumber().isBlank()) {
-            return Mono.error(new ApiException("flightNumber is required"));
+            return Mono.error(new ApiException("Flight number cannot be empty"));
         }
 
+        // Find or create airline
         Mono<Airline> airlineMono = airlineRepository.findByName(request.getAirlineName())
                 .switchIfEmpty(
                         airlineRepository.save(
@@ -55,6 +57,7 @@ public class FlightServiceImpl implements FlightService {
                         )
                 );
 
+        // Create flight only after airline is available
         return airlineMono.flatMap(airline -> {
             Flight flight = Flight.builder()
                     .flightNumber(request.getFlightNumber())
@@ -67,6 +70,7 @@ public class FlightServiceImpl implements FlightService {
                     .availableSeats(request.getTotalSeats())
                     .airlineId(airline.getId())
                     .build();
+
             return flightRepository.save(flight);
         });
     }
@@ -76,7 +80,13 @@ public class FlightServiceImpl implements FlightService {
         LocalDate date = req.getTravelDate();
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(23, 59, 59);
-        return flightRepository.search(req.getFromPlace(), req.getToPlace(), start, end);
+
+        return flightRepository.search(
+                req.getFromPlace(),
+                req.getToPlace(),
+                start,
+                end
+        );
     }
 
     @Override

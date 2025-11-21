@@ -5,8 +5,6 @@ import com.flightapp.dto.BookingResponse;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
-import java.util.List;
-
 public interface BookingService {
     Mono<BookingResponse> bookTicket(Long flightId, BookingRequest request);
     Mono<BookingResponse> getTicketByPnr(String pnr);

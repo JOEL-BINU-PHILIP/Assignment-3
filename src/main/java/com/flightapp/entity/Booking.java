@@ -26,4 +26,3 @@ public class Booking {
     private Boolean canceled;
     private LocalDateTime canceledAt;
 }
-

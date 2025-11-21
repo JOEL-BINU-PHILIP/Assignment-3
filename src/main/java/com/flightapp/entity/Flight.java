@@ -27,6 +27,6 @@ public class Flight {
     private Integer totalSeats;
     private Integer availableSeats;
 
-    // store airline id rather than object relation
+    // store airline id rather than object relation in R2DBC approach
     private Long airlineId;
 }
